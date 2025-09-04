@@ -54,15 +54,7 @@ vec2 rotate2d(in vec2 _center,in vec2 _st,in float _angle){
     return _st;
 }
 
-float box(in vec2 _st, in vec2 _size){
-    _size = vec2(0.5) - 0.5 * _size;
-    vec2 uv = vec2(.0);
-    
-    uv = smoothstep(_size,_size+0.001,_st);
-    uv *= smoothstep(_size,_size+0.001,vec2(1.0)-_st);
-    
-    return uv.x * uv.y;
-}
+
 
 float random(in float f){
     return fract(sin(f) * 100000.);
@@ -128,7 +120,7 @@ float gradient_noise(vec2 st) {
                      dot( random2(i + vec2(1.0,1.0) ), f - vec2(1.0,1.0) ), u.x), u.y);
 }
 
-float line(in  float y,in float n){
+float line(in float y,in float n){
     y = y * n;
     y = fract(y);
     
@@ -140,16 +132,56 @@ float circle(in vec2 toCenter, in float radius,in float size){
 	return  smoothstep(r-size,r,l)-smoothstep(r,r+size,l);
 }
 
+float box(in vec2 _st, in vec2 _size){
+    _size = vec2(0.5) - 0.5 * _size;
+    vec2 uv = vec2(.0);
+    
+    uv = smoothstep(_size,_size+0.001,_st);
+    uv *= smoothstep(_size,_size+0.001,vec2(1.0)-_st);
+    
+    return uv.x * uv.y;
+}
+
+float axis(in vec2 st){
+    float l = box(st,vec2(1.,0.01)) + box(st,vec2(0.01,1.));
+    return step(0.01,l);
+}
+
 float plot(in float v, in float y,in float size){
     return smoothstep(y-size,y,v) - smoothstep(y,y+size,v);
 }
+
+vec2 plot_uv(in vec2 st){
+      vec2 uv = st;
+    uv.x += .5;
+    uv.x *= PI*4.;
+    uv.y -= .5;
+    uv.y *= 10.;
+    return uv;
+}
+
 
 void main(){
     vec2 st = gl_FragCoord.xy/u_resolution.xy;
     st.x *= u_resolution.x/u_resolution.y;
     vec3 color= vec3(0.);
     
-    color += plot(st.x,st.y,0.01);
+    vec2 uv = plot_uv(st);
+    
+    float x = uv.x;
+    float freqency = 2.;
+    float amplitude = 1.;
+    float t = -1.3 * u_time;
+	float y = sin(x * freqency + t);
+    y += sin(x * freqency * 2.1 + t) * 0.41;
+    y += sin(x * freqency * 1.5 + t * 1.21)*0.11;
+    y += sin(x * freqency * 2.3 + t * 0.21)*1.22;
+    y += sin(x * freqency * 3.1 + t * 0.41)*0.31;
 
-    gl_FragColor = vec4(color,1.0);
+    y += amplitude * 0.6;
+    
+    color += plot(y,uv.y,0.1);
+    color += axis(st);
+
+    gl_FragColor = vec4(color,1);
 }
