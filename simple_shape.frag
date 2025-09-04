@@ -154,34 +154,60 @@ float plot(in float v, in float y,in float size){
 vec2 plot_uv(in vec2 st){
       vec2 uv = st;
     uv.x += .5;
-    uv.x *= PI*4.;
+    uv.x *= PI*1.;
     uv.y -= .5;
     uv.y *= 10.;
     return uv;
 }
 
+#define OCTAVES 6
+float fbm(in vec2 st){
+    float value = 0.;
+    float amplitude = .5;
+    float freqency = 0.;
+    
+    for(int i = 0 ; i < OCTAVES ; i++){
+        value += amplitude * noise(st);
+        st *= 2.0;
+        amplitude *= .5;
+    }
+    return value;
+}
 
 void main(){
     vec2 st = gl_FragCoord.xy/u_resolution.xy;
     st.x *= u_resolution.x/u_resolution.y;
     vec3 color= vec3(0.);
     
-    vec2 uv = plot_uv(st);
     
-    float x = uv.x;
-    float freqency = 2.;
-    float amplitude = 1.;
-    float t = -1.3 * u_time;
-	float y = sin(x * freqency + t);
-    y += sin(x * freqency * 2.1 + t) * 0.41;
-    y += sin(x * freqency * 1.5 + t * 1.21)*0.11;
-    y += sin(x * freqency * 2.3 + t * 0.21)*1.22;
-    y += sin(x * freqency * 3.1 + t * 0.41)*0.31;
+    vec2 uv = st * 10.;
+	float c = plot(uv.x,uv.y,0.01) ;
+    
+    float strength = 0.10;
+    float n1 = fbm(uv)* strength;
+    float n2 = noise(uv)* strength;
+    float n3 = gradient_noise(uv)* strength;
+    float n4 = random(uv)* strength;
+    
+    float r = .1;
+    float edge_size = .2;
+    uv = st;
+    uv.x += n1;
 
-    y += amplitude * 0.6;
+    color += circle(uv-vec2(.3,.3),r,edge_size);
+    uv = st;
+    uv.x += n2;
+    color += circle(uv-vec2(.7,.3),r,edge_size);
+    uv = st;
+    uv.x += n3;
+    color += circle(uv-vec2(.3,.7),r,edge_size);
+    uv = st;
+    uv.x += n4;
+    color += circle(uv-vec2(.7,.7),r,edge_size);
     
-    color += plot(y,uv.y,0.1);
-    color += axis(st);
+    
+    //color += plot(y,uv.y,0.1);
+    //color += axis(st);
 
     gl_FragColor = vec4(color,1);
 }
