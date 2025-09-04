@@ -140,18 +140,16 @@ float circle(in vec2 toCenter, in float radius,in float size){
 	return  smoothstep(r-size,r,l)-smoothstep(r,r+size,l);
 }
 
-float plot(in vec2 y)
+float plot(in float v, in float y,in float size){
+    return smoothstep(y-size,y,v) - smoothstep(y,y+size,v);
+}
 
 void main(){
     vec2 st = gl_FragCoord.xy/u_resolution.xy;
     st.x *= u_resolution.x/u_resolution.y;
     vec3 color= vec3(0.);
     
-    float y = st.x;
-    float size = .01;
-    float c = smoothstep(y-size,y,st.y) - smoothstep(y,y+size,st.y);
-
-    color += c;
+    color += plot(st.x,st.y,0.01);
 
     gl_FragColor = vec4(color,1.0);
 }
